@@ -1,4 +1,4 @@
-name: 🛠️ Build Laravel & Create Artifact
+name: Build Laravel & Create Artifact
 
 on:
   push:
@@ -9,10 +9,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup PHP
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
@@ -23,6 +26,8 @@ jobs:
         with:
           path: vendor
           key: ${{ runner.os }}-vendor-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-vendor-
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
@@ -35,7 +40,7 @@ jobs:
           zip -r built-project.zip . \
             -x '.git/*' '.github/*' '.env' 'storage/logs/*' 'storage/framework/sessions/*'
 
-      - name: 💾 Upload built project as artifact
+      - name: Upload built project as artifact
         uses: actions/upload-artifact@v4
         with:
           name: dentes-built
