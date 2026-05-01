@@ -17,24 +17,23 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, pdo_mysql, zip, fileinfo
 
-      - name: Create temp directory
-        run: mkdir -p /tmp/laravel && chmod 777 /tmp/laravel
-
-      - name: Install Composer dependencies (ignore scripts)
+      - name: Install Composer dependencies (no scripts)
         run: composer install --no-interaction --no-progress --optimize-autoloader --no-dev --no-scripts
 
-      - name: Generate app key and cache config manually
-        run: |
-          php -r "file_exists('.env') || copy('.env.example', '.env');"
-          php artisan key:generate --no-interaction
-          php artisan config:cache --no-interaction
-
-      - name: Prepare for Beget
+      - name: Prepare folder structure for Beget
         run: |
           mkdir -p bootstrap/cache
-          chmod 755 bootstrap/cache
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/views
+          mkdir -p storage/logs
+          chmod -R 755 bootstrap/cache storage
 
-      - name: Archive project
+      - name: Create .env with dummy key
+        run: |
+          cp .env.example .env 2>/dev/null || echo "APP_KEY=base64:dummykey1234567890" > .env
+
+      - name: Archive project (without running artisan)
         run: |
           zip -r dentes-beget.zip . \
             -x '.git/*' '.github/*' 'storage/logs/*' 'storage/framework/sessions/*' 'storage/framework/cache/*'
