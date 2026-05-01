@@ -17,20 +17,22 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, pdo_mysql, zip, fileinfo
 
-      - name: Install Composer dependencies
-        run: composer install --no-interaction --no-progress --optimize-autoloader --no-dev
+      - name: Create temp directory
+        run: mkdir -p /tmp/laravel && chmod 777 /tmp/laravel
 
-      - name: Generate app key
-        run: php artisan key:generate --show
+      - name: Install Composer dependencies (ignore scripts)
+        run: composer install --no-interaction --no-progress --optimize-autoloader --no-dev --no-scripts
+
+      - name: Generate app key and cache config manually
+        run: |
+          php -r "file_exists('.env') || copy('.env.example', '.env');"
+          php artisan key:generate --no-interaction
+          php artisan config:cache --no-interaction
 
       - name: Prepare for Beget
         run: |
-          # Создаём папку для временных файлов
           mkdir -p bootstrap/cache
           chmod 755 bootstrap/cache
-          # Создаём заглушку .env для сборки
-          cp .env.example .env
-          php artisan config:cache
 
       - name: Archive project
         run: |
