@@ -1,4 +1,4 @@
-name: Build Laravel Project
+name: Build Laravel for Beget
 
 on:
   push:
@@ -15,16 +15,30 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: mbstring, pdo_mysql, zip, fileinfo
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+        run: composer install --no-interaction --no-progress --optimize-autoloader --no-dev
 
+      - name: Generate app key
+        run: php artisan key:generate --show
+
+      - name: Prepare for Beget
+        run: |
+          # Создаём папку для временных файлов
+          mkdir -p bootstrap/cache
+          chmod 755 bootstrap/cache
+          # Создаём заглушку .env для сборки
+          cp .env.example .env
+          php artisan config:cache
 
       - name: Archive project
-        run: zip -r built-project.zip . -x '.git/*' '.github/*' '.env' 'storage/logs/*'
+        run: |
+          zip -r dentes-beget.zip . \
+            -x '.git/*' '.github/*' 'storage/logs/*' 'storage/framework/sessions/*' 'storage/framework/cache/*'
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dentes-built
-          path: built-project.zip
+          name: dentes-beget
+          path: dentes-beget.zip
